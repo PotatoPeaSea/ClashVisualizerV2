@@ -1,0 +1,28 @@
+# Visual Studio / C++ / CMake
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.pdb
+*.vcxproj*
+.vs/
+build/
+cmake-build-debug/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Images 
+images/*.jpg
+images/*.png
