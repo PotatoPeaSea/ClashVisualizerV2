@@ -6,14 +6,16 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include <windows.h>
+#include <vector>
 
 using namespace cv;
 
 
-const int runMode = 2; // 1 for live video , 2 to read a video file
+const int runMode = 1; // 1 for live video , 2 to read a video file
 const std::string videoPath = "../../video/test3.mp4";
 
 int findStarterBox(cv::Mat frame, Rect& dimensions);
+int findCardPos(int xPos);
 void mouseCallback(int event, int x, int y, int flags, void* userdata);
 Point starterBoxCordinates = Point(680, 971); // Top-left corner of the starter box
 
@@ -23,6 +25,12 @@ struct Card {
     std::string name;
     Mat sprite;
     int elixirCost;
+    int pos;
+    bool isInDeck;
+    int counter;
+    bool isInHand;
+    bool playState;
+
 };
 
 
@@ -40,26 +48,29 @@ int main()
     };
 
     Card cards[8] = {
-        {"Cannon", cardSprites[0], 3},
-        {"Earthquake", cardSprites[1], 3},
-        {"Firecracker", cardSprites[2], 3},
-        {"Hog Rider", cardSprites[3], 4},
-        {"Ice Spirit", cardSprites[4], 1},
-        {"Mighty Miner", cardSprites[5], 4},
-        {"Skeletons", cardSprites[6], 1},
-        {"The Log", cardSprites[7], 2}
+        {"Cannon", cardSprites[0], 3, 0, false, 0, true, false},
+        {"Earthquake", cardSprites[1], 3, 0, false, 0, true, false},
+        {"Firecracker", cardSprites[2], 3, 0, false, 0, true, false},
+        {"Hog Rider", cardSprites[3], 4, 0, false, 0, true, false},
+        {"Ice Spirit", cardSprites[4], 1, 0, false, 0, true, false},
+        {"Mighty Miner", cardSprites[5], 4, 0, false, 0, true, false},
+        {"Skeletons", cardSprites[6], 1, 0, false, 0, true, false},
+        {"The Log", cardSprites[7], 2, 0, false, 0, true, false}
     };
-    
+
+    std::vector<Card> hand;
     int cardsSize = sizeof(cardSprites) / sizeof(cardSprites[0]);
 
     double scale = 0.7;
-    for(int i = 0; i < 8; i++){
+
+    for(int i = 0; i < 8; i++){ // initialize the card sprites and do preprocessing by scaling and converting the colour space, also initializes the hand will null objects
         if(cardSprites[i].empty()){
             std::cerr << "Failed to load card image at index " << i << std::endl;
             return -1;
         }
          resize(cardSprites[i], cardSprites[i], cv::Size(), scale, scale, cv::INTER_LANCZOS4); // Resize card image
          cvtColor(cardSprites[i], cardSprites[i], COLOR_BGR2GRAY);
+         hand.push_back({"Null", Mat(), 0, 0, false, 0, false});
     }
 
     // Disable OpenCV's verbose logging
@@ -168,16 +179,52 @@ int main()
 
 
             if(maxVal > 0.4){
+                cards[i].isInDeck = true;
                 // std::cout << "Found card: " << cards[i].name << " at " << matchLoc << " with confidence: " << maxVal << std::endl;
                 rectangle(frame, matchLoc, Point(matchLoc.x + cardSprites[i].cols , matchLoc.y + cardSprites[i].rows), Scalar(0,255,0), 2, 8, 0);
-                putText(frame, cards[i].name + " (" + std::to_string(maxVal) + ")", Point(matchLoc.x, matchLoc.y + 5 + (i*10)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+                // putText(frame, cards[i].name + " (" + std::to_string(maxVal) + ")", Point(matchLoc.x, matchLoc.y + 5 + (i*10)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+                putText(frame, cards[i].name + " (" + std::to_string(findCardPos(matchLoc.x)) + ")", Point(matchLoc.x, matchLoc.y + 5 + (i*10)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+                
             }
             else{
-                std::cout << "card not found: " << cards[i].name << " maxVal: " << maxVal << std::endl;
+                // std::cout << "card not found: " << cards[i].name << " maxVal: " << maxVal << std::endl;
             }
 
-        }
+            if(cards[i].isInDeck == true&&cards[i].isInHand == true){
+                if(maxVal < 0.4){
+                    cards[i].counter++;
+                    if(cards[i].counter > 0){
+                        cards[i].counter = 0;
+                        std::cout << cards[i].name << "has been played" << " with:" << maxVal << "confidence" <<std::endl;
+                        cards[i].isInHand = false;
+                        cards[i].playState = true;
+                    }
+                }
+            }
+            if(cards[i].playState == true){
+                //card has just been played
+                hand.push_back(cards[i]); // put card that was just played at the end
+                cards[i].playState = false;
+                for(int j = 0; j < 8; j++){
+                    if(hand.at(8).name == hand.at(j).name){
+                        hand.erase(hand.begin() + j); // remove card from previous position
+                        break;
+                    }
+                }
+                
+            }
+            for(int k = 0; k < 4; k++){
+                    if(hand.at(k).name != "Null"){
+                        std::cout << "Hand card " << k << ": " << hand.at(k).name << std::endl; 
+                    }
+                    if(hand.at(k).name == cards[i].name){
+                        cards[i].isInHand = true;
+                        break;
+                    }
+                }
 
+        }
+        
         
         
         cv::imshow(windowName, frame);
@@ -243,7 +290,7 @@ int findStarterBox(cv::Mat frame, Rect& dimensions) {
 
     matchLoc = maxLoc;
 
-    cv::rectangle(displayImg, matchLoc, cv::Point(matchLoc.x + starterBar.cols , matchLoc.y + starterBar.rows), cv::Scalar::all(0), 2, 8, 0);\
+    cv::rectangle(displayImg, matchLoc, cv::Point(matchLoc.x + starterBar.cols , matchLoc.y + starterBar.rows), cv::Scalar::all(0), 2, 8, 0);
 
     Rect imageRect(0, 0, frame.cols, frame.rows);
     Rect matchRect(matchLoc.x, matchLoc.y, starterBar.cols, starterBar.rows);    
@@ -272,6 +319,39 @@ int findStarterBox(cv::Mat frame, Rect& dimensions) {
     return 0;
 }
 
+int findCardPos(int xPos){
+    if(xPos<146){
+        return 1;
+    }
+    else if(xPos<210){
+        return 2;
+    }
+    else if(xPos<277){
+        return 3;
+    }
+    else if(xPos<347){
+        return 4;
+    }
+    else if (xPos<406) {
+        return 5;
+    }
+    else if (xPos<473) {
+        return 6;
+    }
+    else if (xPos<537) {
+        return 7;
+    }
+    else if (xPos<604) {
+        return 8;
+    }
+    else{
+        return -1;
+        
+    }
+    
+        
+    
+}
 
 void mouseCallback(int event, int x, int y, int flags, void* userdata) {
     if (event == EVENT_LBUTTONDOWN) {
