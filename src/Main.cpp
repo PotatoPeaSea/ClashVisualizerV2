@@ -190,11 +190,11 @@ int main()
                 // std::cout << "card not found: " << cards[i].name << " maxVal: " << maxVal << std::endl;
             }
 
-            if(cards[i].isInDeck == true&&cards[i].isInHand == true){
+            if((cards[i].isInDeck == true&&cards[i].isInHand == true)||cards[i].isInDeck == false && cards[i].counter<1){ // detect if a card has been played based off no longer detecting the card
                 if(maxVal < 0.4){
                     cards[i].counter++;
-                    if(cards[i].counter > 0){
-                        cards[i].counter = 0;
+                    if(cards[i].counter > 1){
+                        cards[i].counter = 1;
                         std::cout << cards[i].name << "has been played" << " with:" << maxVal << "confidence" <<std::endl;
                         cards[i].isInHand = false;
                         cards[i].playState = true;
@@ -205,17 +205,23 @@ int main()
                 //card has just been played
                 hand.push_back(cards[i]); // put card that was just played at the end
                 cards[i].playState = false;
+                std::cout << hand.at(8).name << " has been added to the end of the hand" << std::endl;
                 for(int j = 0; j < 8; j++){
-                    if(hand.at(8).name == hand.at(j).name){
+                    if(hand.at(8).name == hand.at(j).name || hand.at(j).name == "Null"){
                         hand.erase(hand.begin() + j); // remove card from previous position
+                        std::cout << cards[i].name << "has just been played, moved to the end of the deck" << std::endl;
+                        std::cout << hand.at(j).name << " has been removed from position " << j << std::endl;
                         break;
                     }
                 }
                 
             }
-            for(int k = 0; k < 4; k++){
+            for(int k = 0; k < 5; k++){
+                    if(hand.at(k).name == "Null"){
+                        
+                    }
                     if(hand.at(k).name != "Null"){
-                        std::cout << "Hand card " << k << ": " << hand.at(k).name << std::endl; 
+                        std::cout << "Hand card " << k+1 << ": " << hand.at(k).name << std::endl; 
                     }
                     if(hand.at(k).name == cards[i].name){
                         cards[i].isInHand = true;
