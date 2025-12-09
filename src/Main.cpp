@@ -12,8 +12,7 @@ using namespace cv;
 
 
 const int runMode = 2; // 1 for live video , 2 to read a video file
-const std::string videoPath = "../../video/test3.mp4";
-
+const std::string videoPath = "../../video/clip.mp4";
 int findStarterBox(cv::Mat frame, Rect& dimensions);
 int findCardPos(int xPos);
 void mouseCallback(int event, int x, int y, int flags, void* userdata);
@@ -38,14 +37,14 @@ void displayHand(std::vector<Card> hand);
 int main()
 {
     Mat cardSprites[8] = {
-        imread("../../sprites/CannonCardEvolution2.png"), 
-        imread("../../sprites/EarthquakeCard2.png"),
-        imread("../../sprites/FirecrackerCardEvolution2.png"),
-        imread("../../sprites/HogRiderCard2.png"),
-        imread("../../sprites/IceSpiritCard2.png"),
-        imread("../../sprites/MightyMinerCard2.png"),
-        imread("../../sprites/SkeletonsCard2.png"),
-        imread("../../sprites/TheLogCard2.png")
+        imread("../../sprites2/CannonCardEvolution.png"), 
+        imread("../../sprites2/EarthquakeCard.png"),
+        imread("../../sprites2/FirecrackerCardEvolution.png"),
+        imread("../../sprites2/HogRiderCard.png"),
+        imread("../../sprites2/IceSpiritCard.png"),
+        imread("../../sprites2/MightyMinerCard.png"),
+        imread("../../sprites2/SkeletonsCard.png"),
+        imread("../../sprites2/TheLogCard.png")
     };
 
     Card cards[8] = {
@@ -126,13 +125,13 @@ int main()
 
     while (true) {
         cap >> frame; // grab a frame
-        displayHand(hand);
-        if(runMode == 2){
-            resize(frame, frame, cv::Size(), .666, .666, cv::INTER_LANCZOS4); // Resize frame if reading from video
-        }
+       
         if (frame.empty()) {
             std::cerr << "Warning: captured empty frame" << std::endl;
             break;
+        }
+         if(runMode == 2){
+            resize(frame, frame, cv::Size(), .666, .666, cv::INTER_LANCZOS4); // Resize frame if reading from video
         }
         else{
             // std::cout << "frame grabbed" << std::endl;
@@ -215,20 +214,20 @@ int main()
                         hand.erase(hand.begin() + j); // remove card from previous position
                         std::cout << cards[i].name << "has just been played, moved to the end of the deck" << std::endl;
                         std::cout << hand.at(j).name << " has been removed from position " << j << std::endl;
+                        displayHand(hand);
+
                         break;
                     }
                 }
                 
             }
             for(int k = 0; k < 5; k++){
-                    if(hand.at(k).name == "Null"){
-                        
-                    }
                     if(hand.at(k).name != "Null"){
-                        std::cout << "Hand card " << k+1 << ": " << hand.at(k).name << std::endl; 
+                        // std::cout << "Hand card " << k+1 << ": " << hand.at(k).name << std::endl; 
                     }
                     if(hand.at(k).name == cards[i].name){
                         cards[i].isInHand = true;
+
                         break;
                     }
                 }
@@ -373,7 +372,56 @@ void mouseCallback(int event, int x, int y, int flags, void* userdata) {
 
 void displayHand(std::vector<Card> hand){
     Mat img = imread("../../images/emptyHand.png");
+    for (int i = 0; i < 5; i++) {
+    Mat &card = hand[i].sprite;
+
+    if (card.empty()) continue;
+
+    if (card.channels() == 1) {
+        cvtColor(card, card, COLOR_GRAY2BGR);
+    }
+    if (i == 4) { 
+        resize(card, card, Size(), 0.5, 0.5, INTER_LANCZOS4);
+    }
+}
+    Rect roi1(192, 30, hand.at(0).sprite.cols, hand.at(0).sprite.rows);
+    Rect roi2(354, 30, hand.at(1).sprite.cols, hand.at(1).sprite.rows);
+    Rect roi3(518, 30, hand.at(2).sprite.cols, hand.at(2).sprite.rows);
+    Rect roi4(681, 30, hand.at(3).sprite.cols, hand.at(3).sprite.rows);
+    Rect roi5(45, 197, hand.at(4).sprite.cols, hand.at(4).sprite.rows);
+    std::vector<Rect> rois = {roi1, roi2, roi3, roi4, roi5};
+   for(int i = 0; i < 5; i++){
+        Mat &card = hand.at(i).sprite;
+
+    if (card.empty()) continue;
+
+    if (card.channels() == 1) {
+        cvtColor(card, card, COLOR_GRAY2BGR);
+    }
+
+    if(i<4){
+    resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
+    }
+    else{
+        resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
+    }
+
+    }
+
+    for (auto &r : rois) {
+    if (r.x < 0 || r.y < 0 || r.x + r.width > img.cols || r.y + r.height > img.rows) {
+        std::cout << "ROI out of bounds!" << std::endl;
+        return;
+    }
+    for(int i = 0; i < 5; i++){
+        hand[i].sprite.copyTo(img(rois[i]));
+        
+    }
+}
+    
+   
     putText(img, hand.at(0).name, Point(192,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+
     putText(img, hand.at(1).name, Point(354,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
     putText(img, hand.at(2).name, Point(518,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
     putText(img, hand.at(3).name, Point(681,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
@@ -388,3 +436,5 @@ void displayHand(std::vector<Card> hand){
     setMouseCallback("Hand Display", mouseCallback, nullptr);
 
 }
+
+
