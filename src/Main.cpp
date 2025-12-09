@@ -33,6 +33,7 @@ struct Card {
 
 };
 
+void displayHand(std::vector<Card> hand);
 
 int main()
 {
@@ -125,6 +126,7 @@ int main()
 
     while (true) {
         cap >> frame; // grab a frame
+        displayHand(hand);
         if(runMode == 2){
             resize(frame, frame, cv::Size(), .666, .666, cv::INTER_LANCZOS4); // Resize frame if reading from video
         }
@@ -143,7 +145,9 @@ int main()
      
 
 
-        for(int i = 0; i < cardsSize; i++){
+        for(int i = 0; i < cardsSize; i++){ //loop through all cards and preform template matching and card state logic
+
+            /*These can be commented out after testing*/
             if(cardSprites[i].empty()){
                 std::cerr << "Card image at index " << i << " is empty!" << std::endl;
                 continue;
@@ -178,7 +182,7 @@ int main()
 
 
 
-            if(maxVal > 0.4){
+            if(maxVal > 0.4){ // threshold for detecting a card, maxVal is the confidence score, ranges from 0-1
                 cards[i].isInDeck = true;
                 // std::cout << "Found card: " << cards[i].name << " at " << matchLoc << " with confidence: " << maxVal << std::endl;
                 rectangle(frame, matchLoc, Point(matchLoc.x + cardSprites[i].cols , matchLoc.y + cardSprites[i].rows), Scalar(0,255,0), 2, 8, 0);
@@ -193,7 +197,7 @@ int main()
             if((cards[i].isInDeck == true&&cards[i].isInHand == true)||cards[i].isInDeck == false && cards[i].counter<1){ // detect if a card has been played based off no longer detecting the card
                 if(maxVal < 0.4){
                     cards[i].counter++;
-                    if(cards[i].counter > 1){
+                    if(cards[i].counter > 1){ //if card has been missing for 1 frame, consider it played
                         cards[i].counter = 1;
                         std::cout << cards[i].name << "has been played" << " with:" << maxVal << "confidence" <<std::endl;
                         cards[i].isInHand = false;
@@ -367,3 +371,9 @@ void mouseCallback(int event, int x, int y, int flags, void* userdata) {
     }
 }
 
+void displayHand(std::vector<Card> hand){
+    Mat img = imread("../../images/emptyHand.png");
+    imshow("Hand Display", img);
+    setMouseCallback("Hand Display", mouseCallback, nullptr);
+
+}
