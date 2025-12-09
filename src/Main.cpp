@@ -17,7 +17,7 @@ const std::string videoPath = "../../video/test3.mp4";
 int findStarterBox(cv::Mat frame, Rect& dimensions);
 int findCardPos(int xPos);
 void mouseCallback(int event, int x, int y, int flags, void* userdata);
-Point starterBoxCordinates = Point(680, 971); // Top-left corner of the starter box
+Point starterBoxCordinates = Point(680, 971); // Top-left corner of the starter box 906, 877, 680, 971
 
 int mousex, mousey;
 
@@ -373,7 +373,18 @@ void mouseCallback(int event, int x, int y, int flags, void* userdata) {
 
 void displayHand(std::vector<Card> hand){
     Mat img = imread("../../images/emptyHand.png");
+    putText(img, hand.at(0).name, Point(192,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+    putText(img, hand.at(1).name, Point(354,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+    putText(img, hand.at(2).name, Point(518,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+    putText(img, hand.at(3).name, Point(681,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+
+    putText(img, hand.at(4).name, Point(45,197), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+
+
     imshow("Hand Display", img);
+
+
+                
     setMouseCallback("Hand Display", mouseCallback, nullptr);
 
 }
