@@ -11,7 +11,7 @@
 using namespace cv;
 
 
-const int runMode = 1; // 1 for live video , 2 to read a video file
+const int runMode = 2; // 1 for live video , 2 to read a video file
 const std::string videoPath = "../../video/test3.mp4";
 
 int findStarterBox(cv::Mat frame, Rect& dimensions);
