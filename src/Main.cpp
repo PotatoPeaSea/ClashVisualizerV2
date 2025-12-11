@@ -32,7 +32,7 @@ struct Card {
 
 };
 
-void displayHand(std::vector<Card> hand);
+void displayHand(std::vector<Card>& hand);
 
 int main()
 {
@@ -125,7 +125,8 @@ int main()
 
     while (true) {
         cap >> frame; // grab a frame
-       
+        displayHand(hand);
+
         if (frame.empty()) {
             std::cerr << "Warning: captured empty frame" << std::endl;
             break;
@@ -193,10 +194,10 @@ int main()
                 // std::cout << "card not found: " << cards[i].name << " maxVal: " << maxVal << std::endl;
             }
 
-            if((cards[i].isInDeck == true&&cards[i].isInHand == true)||cards[i].isInDeck == false && cards[i].counter<1){ // detect if a card has been played based off no longer detecting the card
+            if((cards[i].isInDeck == true&&cards[i].isInHand == true)||(cards[i].isInDeck == false && cards[i].counter<1)){ // detect if a card has been played based off no longer detecting the card
                 if(maxVal < 0.4){
                     cards[i].counter++;
-                    if(cards[i].counter > 1){ //if card has been missing for 1 frame, consider it played
+                    if(cards[i].counter > 8){ //if card has been missing for 1 frame, consider it played
                         cards[i].counter = 1;
                         std::cout << cards[i].name << "has been played" << " with:" << maxVal << "confidence" <<std::endl;
                         cards[i].isInHand = false;
@@ -214,7 +215,6 @@ int main()
                         hand.erase(hand.begin() + j); // remove card from previous position
                         std::cout << cards[i].name << "has just been played, moved to the end of the deck" << std::endl;
                         std::cout << hand.at(j).name << " has been removed from position " << j << std::endl;
-                        displayHand(hand);
 
                         break;
                     }
@@ -370,71 +370,139 @@ void mouseCallback(int event, int x, int y, int flags, void* userdata) {
     }
 }
 
-void displayHand(std::vector<Card> hand){
-    Mat img = imread("../../images/emptyHand.png");
-    for (int i = 0; i < 5; i++) {
-    Mat &card = hand[i].sprite;
+// void displayHand(std::vector<Card> hand){
+//     Mat img = imread("../../images/emptyHand.png");
+// //     for (int i = 0; i < 5; i++) {
+// //     Mat &card = hand[i].sprite;
 
-    if (card.empty()) continue;
+// //     if (card.empty()) continue;
 
-    if (card.channels() == 1) {
-        cvtColor(card, card, COLOR_GRAY2BGR);
-    }
-    if (i == 4) { 
-        resize(card, card, Size(), 0.5, 0.5, INTER_LANCZOS4);
-    }
-}
-    Rect roi1(192, 30, hand.at(0).sprite.cols, hand.at(0).sprite.rows);
-    Rect roi2(354, 30, hand.at(1).sprite.cols, hand.at(1).sprite.rows);
-    Rect roi3(518, 30, hand.at(2).sprite.cols, hand.at(2).sprite.rows);
-    Rect roi4(681, 30, hand.at(3).sprite.cols, hand.at(3).sprite.rows);
-    Rect roi5(45, 197, hand.at(4).sprite.cols, hand.at(4).sprite.rows);
-    std::vector<Rect> rois = {roi1, roi2, roi3, roi4, roi5};
-   for(int i = 0; i < 5; i++){
-        Mat &card = hand.at(i).sprite;
+// //     if (card.channels() == 1) {
+// //         cvtColor(card, card, COLOR_GRAY2BGR);
+// //     }
+// //     if (i == 4) { 
+// //         resize(card, card, Size(), 0.5, 0.5, INTER_LANCZOS4);
+// //     }
+// // }
+// //     Rect roi1(192, 30, hand.at(0).sprite.cols, hand.at(0).sprite.rows);
+// //     Rect roi2(354, 30, hand.at(1).sprite.cols, hand.at(1).sprite.rows);
+// //     Rect roi3(518, 30, hand.at(2).sprite.cols, hand.at(2).sprite.rows);
+// //     Rect roi4(681, 30, hand.at(3).sprite.cols, hand.at(3).sprite.rows);
+// //     Rect roi5(45, 197, hand.at(4).sprite.cols, hand.at(4).sprite.rows);
+// //     std::vector<Rect> rois = {roi1, roi2, roi3, roi4, roi5};
+// //    for(int i = 0; i < 5; i++){
+// //         Mat &card = hand.at(i).sprite;
 
-    if (card.empty()) continue;
+// //     if (card.empty()) continue;
 
-    if (card.channels() == 1) {
-        cvtColor(card, card, COLOR_GRAY2BGR);
-    }
+// //     if (card.channels() == 1) {
+// //         cvtColor(card, card, COLOR_GRAY2BGR);
+// //     }
 
-    if(i<4){
-    resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
-    }
-    else{
-        resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
-    }
+// //     if(i<4){
+// //     resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
+// //     }
+// //     else{
+// //         resize(card, card, Size(rois[i].width, rois[i].height), 0, 0, INTER_LANCZOS4);
+// //     }
 
-    }
+// //     }
 
-    for (auto &r : rois) {
-    if (r.x < 0 || r.y < 0 || r.x + r.width > img.cols || r.y + r.height > img.rows) {
-        std::cout << "ROI out of bounds!" << std::endl;
-        return;
-    }
-    for(int i = 0; i < 5; i++){
-        hand[i].sprite.copyTo(img(rois[i]));
+// //     for (auto &r : rois) {
+// //     if (r.x < 0 || r.y < 0 || r.x + r.width > img.cols || r.y + r.height > img.rows) {
+// //         std::cout << "ROI out of bounds!" << std::endl;
+// //         return;
+// //     }
+// //     for(int i = 0; i < 5; i++){
+// //         hand[i].sprite.copyTo(img(rois[i]));
         
-    }
-}
+// //     }
+// // }
     
    
-    putText(img, hand.at(0).name, Point(192,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+//     putText(img, hand.at(0).name, Point(192,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 
-    putText(img, hand.at(1).name, Point(354,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-    putText(img, hand.at(2).name, Point(518,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-    putText(img, hand.at(3).name, Point(681,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+//     putText(img, hand.at(1).name, Point(354,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+//     putText(img, hand.at(2).name, Point(518,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+//     putText(img, hand.at(3).name, Point(681,30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 
-    putText(img, hand.at(4).name, Point(45,197), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+//     putText(img, hand.at(4).name, Point(45,197), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 
 
-    imshow("Hand Display", img);
+//     cv::imshow("Hand Display", img);
 
 
                 
-    setMouseCallback("Hand Display", mouseCallback, nullptr);
+//     cv::setMouseCallback("Hand Display", mouseCallback, nullptr);
 
+// }
+
+
+
+void displayHand(std::vector<Card>& hand){
+    Mat img = imread("../../images/emptyHand.png");
+    if (img.empty()) {
+        std::cerr << "Failed to load emptyHand.png" << std::endl;
+        return;
+    }
+
+    // Top-left positions for each hand slot (4 cards in top row, 1 in bottom)
+    std::vector<Point> positions = { 
+        Point(192, 30),   // Card 1
+        Point(354, 30),   // Card 2
+        Point(518, 30),   // Card 3
+        Point(681, 30),   // Card 4
+        Point(45, 197)    // Card 5 (next card slot)
+    };
+
+    for (size_t i = 0; i < positions.size() && i < hand.size(); ++i) {
+        const Mat& sprite = hand[i].sprite;
+        
+        // Skip empty sprites
+        if (sprite.empty()) continue;
+
+        // Create a BGR version of the sprite (convert from grayscale if needed)
+        Mat spriteBGR;
+        if (sprite.channels() == 1) {
+            cvtColor(sprite, spriteBGR, COLOR_GRAY2BGR);
+        } else if (sprite.channels() == 3) {
+            spriteBGR = sprite;
+        } else if (sprite.channels() == 4) {
+            cvtColor(sprite, spriteBGR, COLOR_BGRA2BGR);
+        } else {
+            continue; // unsupported channel count
+        }
+
+        // Calculate the ROI on img (with bounds checking)
+        int x = positions[i].x;
+        int y = positions[i].y;
+        int w = spriteBGR.cols;
+        int h = spriteBGR.rows;
+
+        // Clip to image boundaries
+        if (x >= img.cols || y >= img.rows) continue; // completely outside
+        if (x < 0) { w += x; x = 0; }
+        if (y < 0) { h += y; y = 0; }
+        if (x + w > img.cols) w = img.cols - x;
+        if (y + h > img.rows) h = img.rows - y;
+        if (w <= 0 || h <= 0) continue; // nothing to draw
+
+        // Extract ROIs
+        Rect imgROI_rect(x, y, w, h);
+        Rect spriteROI_rect(0, 0, w, h);
+        
+        Mat imgROI = img(imgROI_rect);
+        Mat spriteROI = spriteBGR(spriteROI_rect);
+
+        // Copy sprite into img
+        spriteROI.copyTo(imgROI);
+
+        // Add label
+        putText(img, hand[i].name, Point(x, y - 5), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+    }
+
+    imshow("Hand Display", img);
+    setMouseCallback("Hand Display", mouseCallback, nullptr);
 }
 
 
